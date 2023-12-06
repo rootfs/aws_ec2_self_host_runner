@@ -76,6 +76,8 @@ EOF
 # Encode user data so it can be passed as an argument to the AWS CLI
 ENCODED_USER_DATA=$(echo "$USER_DATA" | base64)
 
+debug "encoded user data: $ENCODED_USER_DATA"
+
 # we use spot instance, the bid price is determined by the spot price history, simply use the last price for now
 # Fetching spot price history
 debug "Fetching spot price history..."
