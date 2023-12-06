@@ -51,13 +51,6 @@ if [ -z "$GITHUB_TOKEN" ]; then
     exit 1
 fi
 
-# fail if aws cli is not found
-if ! command -v aws &> /dev/null
-then
-    echo "aws cli could not be found"
-    exit 1
-fi
-
 # GitHub Runner setup script
 # based on https://github.com/organizations/sustainable-computing-io/settings/actions/runners/new?arch=x64&os=linux
 # github_token is set in the environment variable
@@ -87,7 +80,7 @@ ENCODED_USER_DATA=$(echo "$USER_DATA" | base64)
 # Fetching spot price history
 debug "Fetching spot price history..."
 BID_PRICE=$(aws ec2 describe-spot-price-history --instance-types $INSTANCE_TYPE \
-    --product-descriptions "Linux/UNIX" --availability-zone ${REGION} \
+    --product-descriptions "Linux/UNIX" --region ${REGION} \
     --query 'SpotPriceHistory[0].SpotPrice' --output text)
 
 # Creating a spot instance request
@@ -96,7 +89,7 @@ debug "Creating a spot instance with an initial bid of ${BID_PRICE}"
 for i in {1..3}
 do
     INSTANCE_JSON=$(aws ec2 run-instances --image-id $AMI_ID --count 1 --instance-type $INSTANCE_TYPE \
-    --security-group-ids $SECURITY_GROUP_ID \
+    --security-group-ids $SECURITY_GROUP_ID --region ${REGION}  --region ${REGION} \
     --instance-market-options '{"MarketType":"spot", "SpotOptions": {"MaxPrice": ${BID_PRICE}}}' \
     --user-data $ENCODED_USER_DATA)
 
@@ -108,7 +101,7 @@ do
         echo "Failed to create instance with bid price ${BID_PRICE}"
         # get the latest bid price and increase the bid price by 10%
         BID_PRICE=$(aws ec2 describe-spot-price-history --instance-types $INSTANCE_TYPE \
-            --product-descriptions "Linux/UNIX" --availability-zone ${REGION} \
+            --product-descriptions "Linux/UNIX" --region ${REGION} \
             --query 'SpotPriceHistory[0].SpotPrice' --output text)
         BID_PRICE=$(echo "$BID_PRICE * 1.1" | bc)
         debug "Creating a spot instance with a new bid of ${BID_PRICE}"
@@ -121,7 +114,7 @@ done
 if [ -z "$INSTANCE_ID" ]; then
     echo "Failed to create spot instance, creating on-demand instance instead"
     INSTANCE_JSON=$(aws ec2 run-instances --image-id $AMI_ID --count 1 --instance-type $INSTANCE_TYPE \
-        --security-group-ids $SECURITY_GROUP_ID \
+        --security-group-ids $SECURITY_GROUP_ID --region ${REGION} \
         --user-data $ENCODED_USER_DATA)
 
     # Extract instance ID
@@ -135,12 +128,12 @@ if [ -z "$INSTANCE_ID" ]; then
 fi
 
 # Wait for instance to become ready
-aws ec2 wait instance-status-ok --instance-ids $INSTANCE_ID
+aws ec2 wait instance-status-ok --instance-ids $INSTANCE_ID --region ${REGION} 
 
 # Check if wait command succeeded
 if [ $? -ne 0 ]; then
     echo "Instance failed to become ready. Terminating instance."
-    aws ec2 terminate-instances --instance-ids $INSTANCE_ID
+    aws ec2 terminate-instances --instance-ids $INSTANCE_ID --region ${REGION} 
     exit 1
 fi
 
