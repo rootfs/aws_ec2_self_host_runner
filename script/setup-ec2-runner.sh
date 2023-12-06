@@ -36,7 +36,7 @@ REGION="${REGION:-us-east-2}"          # Region to launch the spot instance
 DEBUG="${DEBUG:-false}"                # Enable debug mode
 
 debug() {
-    [ "$DEBUG" == "true" ] && echo "DEBUG: $@" 1>&2
+    [ "$DEBUG" == "true" ] && set -x && echo "DEBUG: $@" 1>&2
 }
 
 # fail if security group id is not set
