@@ -93,7 +93,7 @@ do
     INSTANCE_JSON=$(aws ec2 run-instances --image-id $AMI_ID --count 1 --instance-type $INSTANCE_TYPE \
     --security-group-ids $SECURITY_GROUP_ID --region ${REGION}  --region ${REGION} \
     --instance-market-options '{"MarketType":"spot", "SpotOptions": {"MaxPrice": ${BID_PRICE}}}' \
-    --user-data $ENCODED_USER_DATA)
+    --user-data \"$ENCODED_USER_DATA\")
 
     # Extract instance ID
     INSTANCE_ID=$(echo "$INSTANCE_JSON" | jq -r '.Instances[0].InstanceId')
@@ -117,7 +117,7 @@ if [ -z "$INSTANCE_ID" ]; then
     echo "Failed to create spot instance, creating on-demand instance instead"
     INSTANCE_JSON=$(aws ec2 run-instances --image-id $AMI_ID --count 1 --instance-type $INSTANCE_TYPE \
         --security-group-ids $SECURITY_GROUP_ID --region ${REGION} \
-        --user-data $ENCODED_USER_DATA)
+        --user-data \"$ENCODED_USER_DATA\")
 
     # Extract instance ID
     INSTANCE_ID=$(echo "$INSTANCE_JSON" | jq -r '.Instances[0].InstanceId')
