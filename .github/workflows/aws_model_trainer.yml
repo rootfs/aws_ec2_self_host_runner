@@ -19,6 +19,10 @@ on:
       aws_security_group_id:
         description: 'AWS Security Group ID'
         required: true
+      debug:
+        description: 'Debug Mode'
+        default: 'false'
+        required: false
 
 env:
   AWS_REGION: ${{ github.event.inputs.aws_region }}
@@ -26,6 +30,7 @@ env:
   AWS_ACCESS_KEY_ID: ${{ github.event.inputs.aws_access_key_id }}
   AWS_SECRET_ACCESS_KEY: ${{ github.event.inputs.aws_secret_access_key }}
   AWS_SECURITY_GROUP_ID: ${{ github.event.inputs.aws_security_group_id }}
+  DEBUG: ${{ github.event.inputs.debug }}
 
 jobs:
   setup-runner:
