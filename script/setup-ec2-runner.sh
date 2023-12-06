@@ -27,8 +27,8 @@ set -o pipefail
 set -o nounset
 
 # Define instance parameters
-AMI_ID="${AMI_ID:-"ami-0e83be366243f524a}" # Ubuntu Server 22.04 LTS (HVM), SSD Volume Type, x86_64
-INSTANCE_TYPE="${INSTANCE_TYPE:-"c6i.metal"}" # c is for compute, 6 is 6th geneneration, i is for Intel, metal is for bare metal
+AMI_ID="${AMI_ID:-ami-0e83be366243f524a}" # Ubuntu Server 22.04 LTS (HVM), SSD Volume Type, x86_64
+INSTANCE_TYPE="${INSTANCE_TYPE:-c6i.metal}" # c is for compute, 6 is 6th geneneration, i is for Intel, metal is for bare metal
 SECURITY_GROUP_ID="${SECURITY_GROUP_ID:-YOUR_SECURITY_GROUP_ID}"
 GITHUB_TOKEN="${GITHUB_TOKEN:-YOUR_TOKEN}"
 GITHUB_REPO="${GITHUB_REPO:-"https://github.com/sustainable-computing-io"}"
