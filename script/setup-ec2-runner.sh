@@ -193,6 +193,7 @@ create_runner () {
     # Output the instance ID to github output
     echo "::set-output name=instance-id::$INSTANCE_ID"
     echo "::set-output name=runner_name::$RUNNER_NAME"
+    echo "::set-output name=github_runner_token::$RUNNER_TOKEN"
 }
 
 list_runner () {
@@ -207,10 +208,16 @@ list_runner () {
 unregister_runner () {
     # unregister the runner from github
     # https://docs.github.com/en/rest/reference/actions#delete-a-self-hosted-runner-from-an-organization
+    # cannot delete by runner name, need to get the runner id first
+    RUNNERS=$(curl -s -X GET -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+        -H "Accept: application/vnd.github.v3+json" \
+        -H "X-GitHub-Api-Version: 2022-11-28" \
+        https://api.github.com/repos/${ORG_NAME}/${REPO_NAME}/actions/runners)
+    ID=$(echo $RUNNERS | jq -r '.runners[] | select(.name=="'$RUNNER_NAME'") | .id ')
     curl -L -X DELETE -H "Authorization: Bearer ${GITHUB_TOKEN}" \
         -H "Accept: application/vnd.github.v3+json" \
         -H "X-GitHub-Api-Version: 2022-11-28" \
-        https://api.github.com/repos/${ORG_NAME}/${REPO_NAME}/actions/runners/${RUNNER_NAME}
+        https://api.github.com/repos/${ORG_NAME}/${REPO_NAME}/actions/runners/${ID}
 }
 
 # get the command line arguments and run the matching function
