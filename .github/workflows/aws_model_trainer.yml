@@ -70,6 +70,9 @@ jobs:
     needs: [setup-runner, test]
     runs-on: ubuntu-latest
     steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
     - name: Unregister GitHub Runner
       run: |
         RUNNER_NAME=${{ needs.setup-runner.outputs.runner_name }}
