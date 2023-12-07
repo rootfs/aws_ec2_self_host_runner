@@ -42,7 +42,7 @@ ORG_NAME=$(echo "$GITHUB_REPO" | cut -d'/' -f4)
 # get the repo name from the github repo
 REPO_NAME=$(echo "$GITHUB_REPO" | cut -d'/' -f5)
 # github runner name
-RUNNER_NAME="self-hosted-runner-$ORG_NAME-$REPO_NAME-"$(date +"%Y%m%d%H%M%S")
+RUNNER_NAME="self-hosted-runner-"$(date +"%Y%m%d%H%M%S")
 
 debug() {
     [ "$DEBUG" == "true" ] &&  echo "DEBUG: $@" 1>&2
