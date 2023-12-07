@@ -102,7 +102,7 @@ tar xzf ./actions-runner-linux-x64-2.311.0.tar.gz
 # Create the runner and start the configuration experience
 # there is a bug in the github instruction. The config script does not work with sudo unless we set RUNNER_ALLOW_RUNASROOT=true
 export RUNNER_ALLOW_RUNASROOT=true
-./config.sh --replace --unattended --name ${RUNNER_NAME} --url ${GITHUB_REPO} --token ${RUNNER_TOKEN}
+./config.sh --replace --unattended --name ${RUNNER_NAME} --url https://github.com/${GITHUB_REPO} --token ${RUNNER_TOKEN}
 # Last step, run it!
 ./run.sh
 EOF

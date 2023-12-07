@@ -2,6 +2,15 @@ name: AWS EC2 GitHub Runner Workflow
 
 on:
   workflow_dispatch:
+    inputs:
+      ami_id:
+        description: 'AWS Machine Image ID'
+        required: false
+        default: 'ami-0e83be366243f524a'
+      instance_type:
+        description: 'AWS EC2 Instance Type'
+        required: false
+        default: 't2.micro'
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
   GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
@@ -9,6 +18,8 @@ env:
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   SECURITY_GROUP_ID: ${{ secrets.AWS_SECURITY_GROUP_ID }}
   GITHUB_REPO: ${{ github.repository }}
+  AMI_ID: ${{ github.event.inputs.ami_id }}
+  INSTANCE_TYPE: ${{ github.event.inputs.instance_type }}
 jobs:
   setup-runner:
     runs-on: ubuntu-latest
