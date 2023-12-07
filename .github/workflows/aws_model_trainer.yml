@@ -24,14 +24,6 @@ on:
         default: 'false'
         required: false
 
-env:
-  AWS_REGION: ${{ github.event.inputs.aws_region }}
-  GITHUB_TOKEN: ${{ github.event.inputs.github_token }}
-  AWS_ACCESS_KEY_ID: ${{ github.event.inputs.aws_access_key_id }}
-  AWS_SECRET_ACCESS_KEY: ${{ github.event.inputs.aws_secret_access_key }}
-  SECURITY_GROUP_ID: ${{ github.event.inputs.aws_security_group_id }}
-  DEBUG: ${{ github.event.inputs.debug }}
-
 jobs:
   setup-runner:
     runs-on: ubuntu-latest
@@ -48,8 +40,25 @@ jobs:
             sudo apt-get install -y python3-pip bc
             sudo pip3 install awscli
 
+    - name: Mask sensitive data
+      run: |
+        echo "::add-mask::${{ github.event.inputs.aws_access_key_id }}"
+        echo "::add-mask::${{ github.event.inputs.aws_secret_access_key }}"
+        echo "::add-mask::${{ github.event.inputs.github_token }}"
+        echo "::add-mask::${{ github.event.inputs.aws_security_group_id }}"
+        echo "::add-mask::${{ github.event.inputs.debug }}"
+        echo "::add-mask::${{ github.event.inputs.aws_region }}"
+
+
     - name: Run Setup Script
       id: setup_script
+      env:
+        AWS_REGION: ${{ github.event.inputs.aws_region }}
+        GITHUB_TOKEN: ${{ github.event.inputs.github_token }}
+        AWS_ACCESS_KEY_ID: ${{ github.event.inputs.aws_access_key_id }}
+        AWS_SECRET_ACCESS_KEY: ${{ github.event.inputs.aws_secret_access_key }}
+        SECURITY_GROUP_ID: ${{ github.event.inputs.aws_security_group_id }}
+        DEBUG: ${{ github.event.inputs.debug }}      
       run: |
         script/setup-ec2-runner.sh create
 
@@ -73,13 +82,37 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
+    - name: Mask sensitive data
+      run: |
+        echo "::add-mask::${{ github.event.inputs.aws_access_key_id }}"
+        echo "::add-mask::${{ github.event.inputs.aws_secret_access_key }}"
+        echo "::add-mask::${{ github.event.inputs.github_token }}"
+        echo "::add-mask::${{ github.event.inputs.aws_security_group_id }}"
+        echo "::add-mask::${{ github.event.inputs.debug }}"
+        echo "::add-mask::${{ github.event.inputs.aws_region }}"
+
+
     - name: Unregister GitHub Runner
+      env:
+        AWS_REGION: ${{ github.event.inputs.aws_region }}
+        GITHUB_TOKEN: ${{ github.event.inputs.github_token }}
+        AWS_ACCESS_KEY_ID: ${{ github.event.inputs.aws_access_key_id }}
+        AWS_SECRET_ACCESS_KEY: ${{ github.event.inputs.aws_secret_access_key }}
+        SECURITY_GROUP_ID: ${{ github.event.inputs.aws_security_group_id }}
+        DEBUG: ${{ github.event.inputs.debug }}
       run: |
         RUNNER_NAME=${{ needs.setup-runner.outputs.runner_name }}
         # Unregister runner commands
         ./script/setup-ec2-runner.sh unregister $RUNNER_NAME
 
     - name: Terminate EC2 Instance
+      env:
+        AWS_REGION: ${{ github.event.inputs.aws_region }}
+        GITHUB_TOKEN: ${{ github.event.inputs.github_token }}
+        AWS_ACCESS_KEY_ID: ${{ github.event.inputs.aws_access_key_id }}
+        AWS_SECRET_ACCESS_KEY: ${{ github.event.inputs.aws_secret_access_key }}
+        SECURITY_GROUP_ID: ${{ github.event.inputs.aws_security_group_id }}
+        DEBUG: ${{ github.event.inputs.debug }}
       run: |
         INSTANCE_ID=${{ needs.setup-runner.outputs.instance_id }}
         # Terminate EC2 instance commands
