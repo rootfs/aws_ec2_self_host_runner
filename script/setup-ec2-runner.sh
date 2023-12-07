@@ -22,13 +22,11 @@
 #
 # The script requires the AWS CLI to be installed and configured.
 
-set -o errexit
 set -o pipefail
-set -o nounset
 
 # Define instance parameters
 AMI_ID="${AMI_ID:-ami-0e83be366243f524a}" # Ubuntu Server 22.04 LTS (HVM), SSD Volume Type, x86_64
-INSTANCE_TYPE="${INSTANCE_TYPE:-c6i.metal}" # c is for compute, 6 is 6th geneneration, i is for Intel, metal is for bare metal
+INSTANCE_TYPE="${INSTANCE_TYPE:-t2.micro}" # c6i.metal: c is for compute, 6 is 6th geneneration, i is for Intel, metal is for bare metal
 SECURITY_GROUP_ID="${SECURITY_GROUP_ID:-YOUR_SECURITY_GROUP_ID}"
 GITHUB_TOKEN="${GITHUB_TOKEN:-YOUR_TOKEN}"
 GITHUB_REPO="${GITHUB_REPO:-"https://github.com/sustainable-computing-io"}"
@@ -51,15 +49,33 @@ if [ -z "$GITHUB_TOKEN" ]; then
     exit 1
 fi
 
+# create a github runner registration token using the github token
+# https://docs.github.com/en/actions/hosting-your-own-runners/adding-self-hosted-runners#adding-a-self-hosted-runner-to-a-repository-using-an-invitation-url
+# https://docs.github.com/en/rest/reference/actions#create-a-registration-token-for-an-organization
+
+# get the organization name from the github repo
+ORG_NAME=$(echo "$GITHUB_REPO" | cut -d'/' -f4)
+# get the token
+RUNNER_TOKEN=$(curl -XPOST -H "Authorization: token ${GITHUB_TOKEN}" \
+    -H "Accept: application/vnd.github.v3+json" \
+    https://api.github.com/orgs/${ORG_NAME}/actions/runners/registration-token | jq -r '.token')
+
+debug "runner token: " $RUNNER_TOKEN
+# fail if runner token is not set
+if [ -z "$RUNNER_TOKEN" ]; then
+    echo "RUNNER_TOKEN is not set"
+    exit 1
+fi
+
 # GitHub Runner setup script
 # based on https://github.com/organizations/sustainable-computing-io/settings/actions/runners/new?arch=x64&os=linux
 # github_token is set in the environment variable
-USER_DATA=$(cat <<EOF
+cat <<EOF > user_data.sh
 #!/bin/bash
-sudo apt-get update
-sudo apt-get install -y curl jq
+apt-get update
+apt-get install -y curl jq
 # Create a folder
-mkdir actions-runner && cd actions-runner
+mkdir /tmp/actions-runner && cd /tmp/actions-runner
 # Download the latest runner package
 curl -o actions-runner-linux-x64-2.311.0.tar.gz -L https://github.com/actions/runner/releases/download/v2.311.0/actions-runner-linux-x64-2.311.0.tar.gz
 # Optional: Validate the hash
@@ -67,17 +83,18 @@ curl -o actions-runner-linux-x64-2.311.0.tar.gz -L https://github.com/actions/ru
 # Extract the installer
 tar xzf ./actions-runner-linux-x64-2.311.0.tar.gz
 # Create the runner and start the configuration experience
-./config.sh --url ${GITHUB_REPO} --token ${GITHUB_TOKEN}
+# there is a bug in the github instruction. The config script does not work with sudo unless we set RUNNER_ALLOW_RUNASROOT=true
+export RUNNER_ALLOW_RUNASROOT=true
+./config.sh --replace --unattended --name self-hosted-runner-${INSTANCE_TYPE} --url ${GITHUB_REPO} --token ${RUNNER_TOKEN}
 # Last step, run it!
 ./run.sh
 EOF
-)
 
 # Encode user data so it can be passed as an argument to the AWS CLI
-ENCODED_USER_DATA=$(echo "$USER_DATA" | base64)
+# FIXME: it appears that the user data is not passed to the instance
+# ENCODED_USER_DATA=$(echo "$USER_DATA" | base64 | tr -d \\n)
 
-debug "encoded user data: $ENCODED_USER_DATA"
-
+# debug "encoded user data: $ENCODED_USER_DATA"
 # we use spot instance, the bid price is determined by the spot price history, simply use the last price for now
 # Fetching spot price history
 debug "Fetching spot price history..."
@@ -92,11 +109,12 @@ for i in {1..3}
 do
     INSTANCE_JSON=$(aws ec2 run-instances --image-id $AMI_ID --count 1 --instance-type $INSTANCE_TYPE \
     --security-group-ids $SECURITY_GROUP_ID --region ${REGION}  --region ${REGION} \
-    --instance-market-options '{"MarketType":"spot", "SpotOptions": {"MaxPrice": ${BID_PRICE}}}' \
-    --user-data \"$ENCODED_USER_DATA\")
+    --instance-market-options '{"MarketType":"spot", "SpotOptions": {"MaxPrice": "'${BID_PRICE}'" }}' \
+    --block-device-mappings '[{"DeviceName": "/dev/sda1","Ebs": { "VolumeSize": 200, "DeleteOnTermination": true } }]'\
+    --user-data file://user_data.sh)
 
     # Extract instance ID
-    INSTANCE_ID=$(echo "$INSTANCE_JSON" | jq -r '.Instances[0].InstanceId')
+    INSTANCE_ID=$(echo -n "$INSTANCE_JSON" | jq -r '.Instances[0].InstanceId')
 
     # Check if instance creation failed
     if [ -z "$INSTANCE_ID" ]; then
@@ -108,6 +126,8 @@ do
         BID_PRICE=$(echo "$BID_PRICE * 1.1" | bc)
         debug "Creating a spot instance with a new bid of ${BID_PRICE}"
         continue
+    else
+        break
     fi
 done
 
@@ -117,7 +137,8 @@ if [ -z "$INSTANCE_ID" ]; then
     echo "Failed to create spot instance, creating on-demand instance instead"
     INSTANCE_JSON=$(aws ec2 run-instances --image-id $AMI_ID --count 1 --instance-type $INSTANCE_TYPE \
         --security-group-ids $SECURITY_GROUP_ID --region ${REGION} \
-        --user-data \"$ENCODED_USER_DATA\")
+        --block-device-mappings '[{"DeviceName": "/dev/sda1","Ebs": { "VolumeSize": 200, "DeleteOnTermination": true } }]'\
+        --user-data file://user_data.sh)
 
     # Extract instance ID
     INSTANCE_ID=$(echo "$INSTANCE_JSON" | jq -r '.Instances[0].InstanceId')
@@ -125,6 +146,7 @@ if [ -z "$INSTANCE_ID" ]; then
     # Check if instance creation failed
     if [ -z "$INSTANCE_ID" ]; then
         echo "Failed to create on-demand instance"
+        rm user_data.sh
         exit 1
     fi
 fi
@@ -136,8 +158,10 @@ aws ec2 wait instance-status-ok --instance-ids $INSTANCE_ID --region ${REGION}
 if [ $? -ne 0 ]; then
     echo "Instance failed to become ready. Terminating instance."
     aws ec2 terminate-instances --instance-ids $INSTANCE_ID --region ${REGION} 
+    rm user_data.sh
     exit 1
 fi
 
 # Output the instance ID to github output
+rm user_data.sh
 echo "::set-output name=instance-id::$INSTANCE_ID"
