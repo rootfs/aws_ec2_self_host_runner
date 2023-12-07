@@ -29,7 +29,7 @@ AMI_ID="${AMI_ID:-ami-0e83be366243f524a}" # Ubuntu Server 22.04 LTS (HVM), SSD V
 INSTANCE_TYPE="${INSTANCE_TYPE:-t2.micro}" # c6i.metal: c is for compute, 6 is 6th geneneration, i is for Intel, metal is for bare metal
 SECURITY_GROUP_ID="${SECURITY_GROUP_ID:-YOUR_SECURITY_GROUP_ID}"
 GITHUB_TOKEN="${GITHUB_TOKEN:-YOUR_TOKEN}"
-GITHUB_REPO="${GITHUB_REPO:-"https://github.com/sustainable-computing-io/kepler-model-server"}"
+GITHUB_REPO="${GITHUB_REPO:-"sustainable-computing-io/kepler-model-server"}"
 REGION="${REGION:-us-east-2}"          # Region to launch the spot instance
 DEBUG="${DEBUG:-false}"                # Enable debug mode
 
@@ -38,9 +38,9 @@ INSTANCE_ID=""                         # ID of the created instance
 [ "$DEBUG" == "true" ] && set -x
 
 # get the organization name from the github repo
-ORG_NAME=$(echo "$GITHUB_REPO" | cut -d'/' -f4)
+ORG_NAME=$(echo "$GITHUB_REPO" | cut -d'/' -f1)
 # get the repo name from the github repo
-REPO_NAME=$(echo "$GITHUB_REPO" | cut -d'/' -f5)
+REPO_NAME=$(echo "$GITHUB_REPO" | cut -d'/' -f2)
 # github runner name
 RUNNER_NAME="self-hosted-runner-"$(date +"%Y%m%d%H%M%S")
 
