@@ -43,7 +43,7 @@ jobs:
 
   test:
     needs: setup-runner
-    runs-on: ${{ needs.setup-runner.outputs.runner_name }}
+    runs-on: self-hosted
     steps:
     - name: Checkout
       uses: actions/checkout@v2
