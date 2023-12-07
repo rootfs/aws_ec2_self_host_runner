@@ -192,9 +192,8 @@ create_runner () {
     fi
 
     # Output the instance ID to github output
-    echo "::set-output name=instance-id::$INSTANCE_ID"
-    echo "::set-output name=runner_name::$RUNNER_NAME"
-    # echo "::set-output name=github_runner_token::$RUNNER_TOKEN"
+    echo "instance_id=$INSTANCE_ID" >> $GITHUB_OUTPUT
+    echo "runner_name=$RUNNER_NAME" >> $GITHUB_OUTPUT
 }
 
 list_runner () {
