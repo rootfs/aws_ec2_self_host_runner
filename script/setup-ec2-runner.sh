@@ -193,7 +193,7 @@ create_runner () {
     # Output the instance ID to github output
     echo "::set-output name=instance-id::$INSTANCE_ID"
     echo "::set-output name=runner_name::$RUNNER_NAME"
-    echo "::set-output name=github_runner_token::$RUNNER_TOKEN"
+    # echo "::set-output name=github_runner_token::$RUNNER_TOKEN"
 }
 
 list_runner () {
