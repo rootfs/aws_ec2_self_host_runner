@@ -33,7 +33,7 @@ GITHUB_REPO="${GITHUB_REPO:-"https://github.com/sustainable-computing-io/kepler-
 REGION="${REGION:-us-east-2}"          # Region to launch the spot instance
 DEBUG="${DEBUG:-false}"                # Enable debug mode
 DATETIME="self-hosted-runner-"$(date +"%Y%m%d%H%M%S")
-RUNNER_NAME="${RUNNER_NAME:-${DATE_TIME}}" # Name of the runner
+RUNNER_NAME="${RUNNER_NAME:-$DATETIME}" # Name of the runner
 INSTANCE_ID=""                         # ID of the created instance
 
 [ "$DEBUG" == "true" ] && set -x
