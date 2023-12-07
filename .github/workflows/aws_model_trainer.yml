@@ -39,8 +39,9 @@ jobs:
 
     - name: Run Tests
       run: |
-        INSTANCE_ID=${{ needs.setup-runner.outputs.instance_id }}
+        export INSTANCE_ID=${{ needs.setup-runner.outputs.instance_id }}
         echo "Running tests on self-hosted runner with instance $INSTANCE_ID"
+        uname -a # or any other command
 
   destroy-runner:
     if: always()
