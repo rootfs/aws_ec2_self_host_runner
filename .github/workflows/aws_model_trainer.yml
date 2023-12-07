@@ -2,27 +2,6 @@ name: AWS EC2 GitHub Runner Workflow
 
 on:
   workflow_dispatch:
-    inputs:
-      aws_access_key_id:
-        description: 'AWS Access Key ID'
-        required: true
-      aws_secret_access_key:
-        description: 'AWS Secret Access Key'
-        required: true
-      github_token:
-        description: 'GitHub Token'
-        required: true
-      aws_region:
-        description: 'AWS Region'
-        default: 'us-east-2'
-        required: false
-      aws_security_group_id:
-        description: 'AWS Security Group ID'
-        required: true
-      debug:
-        description: 'Debug Mode'
-        default: 'false'
-        required: false
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
   GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
