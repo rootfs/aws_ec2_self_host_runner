@@ -101,7 +101,7 @@ jobs:
         SECURITY_GROUP_ID: ${{ github.event.inputs.aws_security_group_id }}
         DEBUG: ${{ github.event.inputs.debug }}
       run: |
-        RUNNER_NAME=${{ needs.setup-runner.outputs.runner_name }}
+        export RUNNER_NAME=${{ needs.setup-runner.outputs.runner_name }}
         # Unregister runner commands
         ./script/setup-ec2-runner.sh unregister $RUNNER_NAME
 
@@ -114,6 +114,6 @@ jobs:
         SECURITY_GROUP_ID: ${{ github.event.inputs.aws_security_group_id }}
         DEBUG: ${{ github.event.inputs.debug }}
       run: |
-        INSTANCE_ID=${{ needs.setup-runner.outputs.instance_id }}
+        export INSTANCE_ID=${{ needs.setup-runner.outputs.instance_id }}
         # Terminate EC2 instance commands
         ./script/setup-ec2-runner.sh terminate $INSTANCE_ID

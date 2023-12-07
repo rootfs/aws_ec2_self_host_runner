@@ -32,20 +32,21 @@ GITHUB_TOKEN="${GITHUB_TOKEN:-YOUR_TOKEN}"
 GITHUB_REPO="${GITHUB_REPO:-"https://github.com/sustainable-computing-io/kepler-model-server"}"
 REGION="${REGION:-us-east-2}"          # Region to launch the spot instance
 DEBUG="${DEBUG:-false}"                # Enable debug mode
-DATETIME="self-hosted-runner-"$(date +"%Y%m%d%H%M%S")
-RUNNER_NAME="${RUNNER_NAME:-$DATETIME}" # Name of the runner
+
 INSTANCE_ID=""                         # ID of the created instance
 
 [ "$DEBUG" == "true" ] && set -x
-
-debug() {
-    [ "$DEBUG" == "true" ] &&  echo "DEBUG: $@" 1>&2
-}
 
 # get the organization name from the github repo
 ORG_NAME=$(echo "$GITHUB_REPO" | cut -d'/' -f4)
 # get the repo name from the github repo
 REPO_NAME=$(echo "$GITHUB_REPO" | cut -d'/' -f5)
+# github runner name
+RUNNER_NAME="self-hosted-runner-$ORG_NAME-$REPO_NAME-"$(date +"%Y%m%d%H%M%S")
+
+debug() {
+    [ "$DEBUG" == "true" ] &&  echo "DEBUG: $@" 1>&2
+}
 
 get_github_runner_token () {
         # fail if github token is not set
