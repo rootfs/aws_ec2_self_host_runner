@@ -32,7 +32,11 @@ GITHUB_TOKEN="${GITHUB_TOKEN:-YOUR_TOKEN}"
 GITHUB_REPO="${GITHUB_REPO:-"sustainable-computing-io/kepler-model-server"}"
 REGION="${REGION:-us-east-2}"          # Region to launch the spot instance
 DEBUG="${DEBUG:-false}"                # Enable debug mode
-
+KEY_NAME="${KEY_NAME:-YOUR_KEY_NAME}"  # Name of the key pair to use for the instance
+GITHUB_OUTPUT="${GITHUB_OUTPUT:-github_output.txt}" # Name of the file to output the instance ID to
+ROOT_VOLUME_SIZE="${ROOT_VOLUME_SIZE:-200}" # Size of the root volume in GB
+SPOT_INASTANCE_ONLY="${SPOT_INASTANCE_ONLY:-false}" # If true, only create spot instance
+KEY_NAME_OPT=""                        # Option to pass to the AWS CLI to specify the key pair
 INSTANCE_ID=""                         # ID of the created instance
 
 [ "$DEBUG" == "true" ] && set -x
@@ -47,6 +51,14 @@ RUNNER_NAME="self-hosted-runner-"$(date +"%Y%m%d%H%M%S")
 debug() {
     [ "$DEBUG" == "true" ] &&  echo "DEBUG: $@" 1>&2
 }
+
+# check if key name is set
+if [ -z "$KEY_NAME" ]; then
+    debug "KEY_NAME is not set"
+else
+    KEY_NAME_OPT="--key-name $KEY_NAME"    # Option to pass to the AWS CLI to specify the key pair
+fi
+
 
 get_github_runner_token () {
         # fail if github token is not set
@@ -118,21 +130,28 @@ run_spot_instance () {
     INSTANCE_JSON=$(aws ec2 run-instances --image-id $AMI_ID --count 1 --instance-type $INSTANCE_TYPE \
     --security-group-ids $SECURITY_GROUP_ID --region ${REGION}  --region ${REGION} \
     --instance-market-options '{"MarketType":"spot", "SpotOptions": {"MaxPrice": "'${BID_PRICE}'" }}' \
-    --block-device-mappings '[{"DeviceName": "/dev/sda1","Ebs": { "VolumeSize": 200, "DeleteOnTermination": true } }]'\
+    --block-device-mappings '[{"DeviceName": "/dev/sda1","Ebs": { "VolumeSize": '${ROOT_VOLUME_SIZE}', "DeleteOnTermination": true } }]'\
+    $KEY_NAME_OPT \
     --user-data file://user_data.sh)
 }
 
 run_on_demand_instance() {
     INSTANCE_JSON=$(aws ec2 run-instances --image-id $AMI_ID --count 1 --instance-type $INSTANCE_TYPE \
     --security-group-ids $SECURITY_GROUP_ID --region ${REGION} \
-    --block-device-mappings '[{"DeviceName": "/dev/sda1","Ebs": { "VolumeSize": 200, "DeleteOnTermination": true } }]'\
+    --block-device-mappings '[{"DeviceName": "/dev/sda1","Ebs": { "VolumeSize": '${ROOT_VOLUME_SIZE}', "DeleteOnTermination": true } }]'\
+    $KEY_NAME_OPT \
     --user-data file://user_data.sh)
-
 }
 
 terminate_instance () {
     # Terminate instance   
     aws ec2 terminate-instances --instance-ids $INSTANCE_ID --region ${REGION} 
+}
+
+get_instance_ip () {
+    # Get instance IP
+    INSTANCE_IP=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --region ${REGION} \
+        --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)
 }
 
 create_runner () {
@@ -169,6 +188,10 @@ create_runner () {
     # create on-demand instance instead
     if [ -z "$INSTANCE_ID" ]; then
         echo "Failed to create spot instance, creating on-demand instance instead"
+        if [ "$SPOT_INASTANCE_ONLY" == "true" ]; then
+            echo "SPOT_INASTANCE_ONLY is set to true, exiting"
+            exit 1
+        fi
         run_on_demand_instance
 
         # Extract instance ID
@@ -191,9 +214,12 @@ create_runner () {
         exit 1
     fi
 
+    get_instance_ip
+
     # Output the instance ID to github output
     echo "instance_id=$INSTANCE_ID" >> $GITHUB_OUTPUT
     echo "runner_name=$RUNNER_NAME" >> $GITHUB_OUTPUT
+    echo "instance_ip=$INSTANCE_IP" >> $GITHUB_OUTPUT
 }
 
 list_runner () {
