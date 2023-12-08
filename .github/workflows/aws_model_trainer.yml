@@ -6,7 +6,7 @@ on:
       ami_id:
         description: 'AWS Machine Image ID'
         required: false
-        default: 'ami-0e83be366243f524a'
+        default: 'ami-0e4d0bb9670ea8db0'
       instance_type:
         description: 'AWS EC2 Instance Type'
         required: false
