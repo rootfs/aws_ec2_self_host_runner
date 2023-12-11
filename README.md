@@ -46,5 +46,5 @@ Create an AWS EC2 Github Action Self hosted Runner
 - ROOT_VOLUME_SIZE: The size of the root volume in GB.
   - Default value: 200
 - SPOT_INASTANCE_ONLY: If true, only create a spot instance.
-  - Default value: "false"
+  - Default value: "true"
 
