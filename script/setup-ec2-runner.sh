@@ -35,7 +35,7 @@ DEBUG="${DEBUG:-false}"                # Enable debug mode
 KEY_NAME="${KEY_NAME:-YOUR_KEY_NAME}"  # Name of the key pair to use for the instance
 GITHUB_OUTPUT="${GITHUB_OUTPUT:-github_output.txt}" # Name of the file to output the instance ID to
 ROOT_VOLUME_SIZE="${ROOT_VOLUME_SIZE:-200}" # Size of the root volume in GB
-SPOT_INASTANCE_ONLY="${SPOT_INASTANCE_ONLY:-false}" # If true, only create spot instance
+SPOT_INASTANCE_ONLY="${SPOT_INASTANCE_ONLY:-true}" # If true, only create spot instance
 KEY_NAME_OPT=""                        # Option to pass to the AWS CLI to specify the key pair
 INSTANCE_ID=""                         # ID of the created instance
 
