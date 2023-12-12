@@ -25,29 +25,19 @@ Create an AWS EC2 Github Action Self hosted Runner
 
 # Define instance parameters
 
-- AMI_ID: The ID of the Amazon Machine Image (AMI) to use for the instance.
-  - Default value: "ami-0e4d0bb9670ea8db0" (Ubuntu Server 20.04 LTS)
-- INSTANCE_TYPE: The type of the instance to launch.
-  - Default value: "t2.micro"
-- SECURITY_GROUP_ID: The ID of the security group to associate with the instance.
-  - Replace "YOUR_SECURITY_GROUP_ID" with the actual security group ID.
-- GITHUB_TOKEN: The GitHub token to authenticate with the GitHub API. Must have repo admin permission.
-  - Replace "YOUR_TOKEN" with the actual GitHub token.
-- GITHUB_REPO: The GitHub repository in the format "owner/repo" to clone and use.
-  - Default value: "sustainable-computing-io/kepler-model-server"
-- REGION: The AWS region to launch the spot instance.
-  - Default value: "us-east-2"
-- DEBUG: Enable or disable debug mode.
-  - Default value: "false"
-- KEY_NAME: The name of the key pair to use for the instance.
-  - Replace "YOUR_KEY_NAME" with the actual key pair name.
-- GITHUB_OUTPUT: The name of the file to output the instance ID to. ***This is only for local test use. Don't set it in the workflow file.***
-  - Default value: "github_output.txt"
-- ROOT_VOLUME_SIZE: The size of the root volume in GB.
-  - Default value: 200
-- SPOT_INASTANCE_ONLY: If true, only create a spot instance.
-  - Default value: "true"
-- CREATE_S3_BUCKET: If true, create a S3 bucket to store the model. 
-  - Default value: "false"
-- BUCKET_NAME: The name of the S3 bucket to store the model.
-  - Default value: The bucket name is the same as the repo name with time date stamp.
+
+| Parameter            | Description                                                                                           | Default Value                            |
+|----------------------|-------------------------------------------------------------------------------------------------------|------------------------------------------|
+| AMI_ID               | The ID of the Amazon Machine Image (AMI) to use for the instance.                                      | "ami-0e4d0bb9670ea8db0" (Ubuntu Server 20.04 LTS) |
+| INSTANCE_TYPE        | The type of the instance to launch.                                                                   | "t2.micro"                               |
+| SECURITY_GROUP_ID    | The ID of the security group to associate with the instance.                                           | Replace "YOUR_SECURITY_GROUP_ID" with the actual security group ID. |
+| GITHUB_TOKEN         | The GitHub token to authenticate with the GitHub API. Must have repo admin permission.                | Replace "YOUR_TOKEN" with the actual GitHub token. |
+| GITHUB_REPO          | The GitHub repository in the format "owner/repo" to clone and use.                                     | "sustainable-computing-io/kepler-model-server" |
+| REGION               | The AWS region to launch the spot instance.                                                            | "us-east-2"                              |
+| DEBUG                | Enable or disable debug mode.                                                                         | "false"                                  |
+| KEY_NAME             | The name of the key pair to use for the instance.                                                      | Replace "YOUR_KEY_NAME" with the actual key pair name. |
+| GITHUB_OUTPUT        | The name of the file to output the instance ID to. ***This is only for local test use. Don't set it in the workflow file.*** | "github_output.txt"                      |
+| ROOT_VOLUME_SIZE     | The size of the root volume in GB.                                                                    | 200                                      |
+| SPOT_INASTANCE_ONLY  | If true, only create a spot instance.                                                                 | "true"                                   |
+| CREATE_S3_BUCKET     | If true, create a S3 bucket to store the model.                                                        | "false"                                  |
+| BUCKET_NAME          | The name of the S3 bucket to store the model.                                                          | The bucket name is the same as the repo name with time date stamp. |

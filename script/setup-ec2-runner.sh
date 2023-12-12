@@ -109,6 +109,11 @@ create_uesr_data () {
 #!/bin/bash
 apt-get update
 apt-get install -y curl jq
+# install the latest kernel modeules and enable rapl. it doesn seem uname -r works in user data script...
+# export KERNEL_VERSION=$(apt list --installed 2>&1 | grep 'linux-image-' | awk -F'/' '{print $1}' |grep "\." | cut -d'-' -f3-) 
+# echo "installing kernel modules for version $KERNEL_VERSION"
+# apt install linux-modules-${KERNEL_VERSION} linux-modules-extra-${KERNEL_VERSION} -y
+# modprobe intel_rapl_common
 # Create a folder
 mkdir /tmp/actions-runner && cd /tmp/actions-runner
 # Download the latest runner package
