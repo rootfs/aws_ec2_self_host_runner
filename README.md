@@ -47,4 +47,7 @@ Create an AWS EC2 Github Action Self hosted Runner
   - Default value: 200
 - SPOT_INASTANCE_ONLY: If true, only create a spot instance.
   - Default value: "true"
-
+- CREATE_S3_BUCKET: If true, create a S3 bucket to store the model. 
+  - Default value: "false"
+- BUCKET_NAME: The name of the S3 bucket to store the model.
+  - Default value: The bucket name is the same as the repo name with time date stamp.

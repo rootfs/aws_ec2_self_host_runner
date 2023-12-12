@@ -36,6 +36,8 @@ KEY_NAME="${KEY_NAME:-YOUR_KEY_NAME}"  # Name of the key pair to use for the ins
 GITHUB_OUTPUT="${GITHUB_OUTPUT:-github_output.txt}" # Name of the file to output the instance ID to
 ROOT_VOLUME_SIZE="${ROOT_VOLUME_SIZE:-200}" # Size of the root volume in GB
 SPOT_INASTANCE_ONLY="${SPOT_INASTANCE_ONLY:-true}" # If true, only create spot instance
+CREATE_S3_BUCKET="${CREATE_S3_BUCKET:-false}" # Wehther to create a S3 bucket to store the model
+BUCKET_NAME="${BUCKET_NAME:-}"         # Name of the S3 bucket
 KEY_NAME_OPT=""                        # Option to pass to the AWS CLI to specify the key pair
 INSTANCE_ID=""                         # ID of the created instance
 
@@ -47,6 +49,10 @@ ORG_NAME=$(echo "$GITHUB_REPO" | cut -d'/' -f1)
 REPO_NAME=$(echo "$GITHUB_REPO" | cut -d'/' -f2)
 # github runner name
 RUNNER_NAME="self-hosted-runner-"$(date +"%Y%m%d%H%M%S")
+# set s3 bucket name if not set and create s3 bucket flag is set to true
+if [ -z "$BUCKET_NAME" ] && [ $CREATE_S3_BUCKET == "true" ]; then
+    BUCKET_NAME=$REPO_NAME"-"$(date +"%Y%m%d%H%M%S")
+fi
 
 debug() {
     [ "$DEBUG" == "true" ] &&  echo "DEBUG: $@" 1>&2
@@ -143,9 +149,27 @@ run_on_demand_instance() {
     --user-data file://user_data.sh)
 }
 
+create_s3_bucket () {
+    # Create S3 bucket
+    if [ $CREATE_S3_BUCKET == "false" ]; then
+        return
+    fi
+    aws s3api create-bucket --bucket ${BUCKET_NAME} --region ${REGION} --create-bucket-configuration LocationConstraint=${REGION}
+}
+
+delete_s3_bucket () {
+    # Delete S3 bucket
+    if [ $CREATE_S3_BUCKET == "false" ]; then
+        return
+    fi
+    aws s3api delete-bucket --bucket ${BUCKET_NAME} --region ${REGION}
+}
+
 terminate_instance () {
     # Terminate instance   
     aws ec2 terminate-instances --instance-ids $INSTANCE_ID --region ${REGION} 
+    # Delete S3 bucket
+    delete_s3_bucket
 }
 
 get_instance_ip () {
@@ -214,12 +238,14 @@ create_runner () {
         exit 1
     fi
 
+    create_s3_bucket
     get_instance_ip
 
     # Output the instance ID to github output
     echo "instance_id=$INSTANCE_ID" >> $GITHUB_OUTPUT
     echo "runner_name=$RUNNER_NAME" >> $GITHUB_OUTPUT
     echo "instance_ip=$INSTANCE_IP" >> $GITHUB_OUTPUT
+    echo "bucket_name=$BUCKET_NAME" >> $GITHUB_OUTPUT
 }
 
 list_runner () {
